@@ -4,7 +4,11 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+appindicator3 = "0.3.0"
 chrono = { version = "0.4", features = ["clock"] }
+glib = "0.18"
+gtk = "0.18"
+image = "0.24.9"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 walkdir = "2"
