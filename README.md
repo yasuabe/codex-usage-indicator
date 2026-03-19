@@ -1,32 +1,68 @@
 # codex-usage-indicator
 
-Codex の利用量を確認するための個人用 GNOME AppIndicator です。
+Ubuntu (GNOME) のトップバーに Codex の利用量を表示する AppIndicator です。
 
-現在の Python プロトタイプは `~/.codex/sessions/**/rollout-*.jsonl` を読み取り、次を表示します。
+## Requirements
 
-- 5h limit
-- Weekly limit
-- Plan
+- Ubuntu / GNOME
+- `cargo`
+- `pkg-config`
+- `libgtk-3-dev`
+- `libayatana-appindicator3-dev`
 
-`Context window` は意図的に対象外としています。
+```bash
+sudo apt install cargo pkg-config libgtk-3-dev libayatana-appindicator3-dev
+```
 
 ## 情報源
 
-Python 実装と Rust 実装はどちらも、次の場所にある
-最新の `token_count.rate_limits` snapshot を読み取ります。
+Rust 実装は `~/.codex/sessions/**/rollout-*.jsonl` を読み取り、
+`rate_limits != null` を持つ最新の `token_count` snapshot を表示します。
 
-```text
-~/.codex/sessions/**/rollout-*.jsonl
-```
+詳しい仕様は [SPEC.md](./SPEC.md) を参照してください。
 
-indicator のメニューには rollout のフルパスを表示しません。
-UI に出すには長すぎて実用的でないためです。
-
-## 実行
+## Development Run
 
 ```bash
-python3 -m codex_usage_indicator.main --mock
-python3 -m codex_usage_indicator.main
 cargo run -- ~/.codex/sessions
 cargo run --bin indicator
+```
+
+## Installer
+
+`install.sh` はユーザー領域にインストールし、ランチャーと自動起動設定を作成します。
+
+- install dir: `~/.local/share/codex-usage-indicator`
+- launcher: `~/.local/bin/codex-usage-indicator`
+- autostart: `~/.config/autostart/codex-usage-indicator.desktop`
+
+### Install
+
+```bash
+./install.sh
+```
+
+### Install Options
+
+```bash
+./install.sh --dry-run       # 変更せず内容だけ表示
+./install.sh --no-autostart  # 自動起動を作らない
+./install.sh --start-now     # インストール後に即起動
+```
+
+## Uninstaller
+
+`uninstall.sh` はインストール先とランチャー、自動起動設定を削除します。
+
+### Uninstall
+
+```bash
+./uninstall.sh
+```
+
+### Uninstall Options
+
+```bash
+./uninstall.sh --dry-run  # 変更せず内容だけ表示
+./uninstall.sh --no-stop  # 実行中プロセス停止をスキップ
 ```
