@@ -2,23 +2,29 @@
 
 ## 目的
 
-`codex-usage-indicator` は、このマシン上の Codex 利用量を素早く確認するための
-ローカル indicator である。
+このマシン上の Codex 利用量を、GNOME トップバーから素早く確認する。
 
-このアプリケーションは `/status` のライブ値を再現しない。
-ローカルに永続化済みの rollout から、もっとも新しい利用量 snapshot を読む。
+## 制約
+
+- `/status` のライブ値を再現するものではない
+- 表示値はローカルに永続化済みの rollout snapshot であり、リアルタイムの現在値ではない
+- ターン進行中のライブ利用量は反映されない
+- 他マシン上の Codex 利用量は対象外である
+- 更新操作が新しい usage snapshot の生成を強制することはない
 
 ## 情報源
 
-情報源は `~/.codex/sessions/**/rollout-*.jsonl` である。
+`~/.codex/sessions/**/rollout-*.jsonl`
 
-各 rollout ファイルの各行を走査し、次の条件を満たす `event_msg` を探す。
+## 選択ルール
+
+全 rollout ファイルの各行を走査し、次の条件を満たす `event_msg` を探す。
 
 - `payload.type == "token_count"`
 - `payload.rate_limits != null`
 
-採用するのは、ファイルの更新時刻が最新のものではなく、
-上記条件を満たす `token_count` イベントの `timestamp` が最も新しいものとする。
+条件を満たす候補のうち、`timestamp` が最も新しいものを採用する。
+ファイルの更新時刻ではなく、イベント自体の `timestamp` で判断する。
 
 同じ `timestamp` を持つ候補が複数ある場合は、より利用量が逼迫している方を採用する。
 ここで「逼迫している」とは、`used_percent` が大きいことを意味する。
@@ -28,17 +34,6 @@
 - `primary.used_percent` が大きい方を優先
 - `primary.used_percent` が同じなら `secondary.used_percent` が大きい方を優先
 - それでも同じなら、実装依存の安定した順序でよい
-
-## 利用量の定義
-
-このアプリケーションが表示する利用量は、次のように定義する。
-
-- indicator を起動しているマシン上の全 rollout を対象にする
-- その中で `rate_limits != null` を持つ最新の `token_count` を探す
-- その `token_count.rate_limits` を表示値として採用する
-
-したがって、表示値は「全セッションの中で最後に永続化された `rate_limits` snapshot」
-であり、ライブ現在値ではない。
 
 ## 表示内容
 
@@ -74,17 +69,8 @@
 - 30秒ごとのポーリング
 - メニューの `今すぐ更新`
 
-どちらも同じ検索ルールを使う。
+どちらも同じ選択ルールを使う。
 どちらも `更新: [更新時刻] ([snapshot時刻])` の形式で表示する。
-
-## 保証しないこと
-
-このアプリケーションは、次を保証しない。
-
-- Codex `/status` と完全一致すること
-- ターン進行中のライブ利用量を表示すること
-- 他マシン上の Codex 利用量を表示すること
-- 更新操作によって新しい usage snapshot を強制生成すること
 
 ## 実装メモ
 
