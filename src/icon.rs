@@ -39,7 +39,11 @@ pub fn cleanup_old_icons(current_path: &Path) -> Result<(), String> {
         let entry = entry.map_err(|err| format!("failed to read icon entry: {err}"))?;
         let path = entry.path();
         if path != current_path
-            && path.file_name().and_then(|name| name.to_str()).unwrap_or("").starts_with("icon_")
+            && path
+                .file_name()
+                .and_then(|name| name.to_str())
+                .unwrap_or("")
+                .starts_with("icon_")
             && path.extension().and_then(|ext| ext.to_str()) == Some("png")
         {
             let _ = fs::remove_file(path);
@@ -61,7 +65,13 @@ fn generate_bars_icon(
         draw_bar(&mut img, 13, 20, 100.0, COLOR_ERROR);
     } else {
         draw_bar(&mut img, 2, 9, primary_usage, color_for(primary_usage));
-        draw_bar(&mut img, 13, 20, secondary_usage, color_for(secondary_usage));
+        draw_bar(
+            &mut img,
+            13,
+            20,
+            secondary_usage,
+            color_for(secondary_usage),
+        );
     }
 
     let icon_path = dir.join(format!("icon_{}.png", unique_millis()?));

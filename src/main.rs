@@ -33,7 +33,10 @@ fn run() -> Result<(), String> {
     if let Some(plan_type) = snapshot.plan_type.as_deref() {
         println!("plan: {plan_type}");
     }
-    println!("timestamp: {}", snapshot.timestamp.with_timezone(&Local).to_rfc3339());
+    println!(
+        "timestamp: {}",
+        snapshot.timestamp.with_timezone(&Local).to_rfc3339()
+    );
 
     Ok(())
 }

@@ -3,7 +3,7 @@ use std::rc::Rc;
 
 use appindicator3::prelude::AppIndicatorExt;
 use appindicator3::{Indicator, IndicatorCategory, IndicatorStatus};
-use chrono::{DateTime, Local};
+use chrono::{DateTime, FixedOffset, Local};
 use codex_usage_indicator::{icon, usage};
 use gtk::prelude::*;
 
@@ -41,10 +41,6 @@ fn main() -> Result<(), glib::BoolError> {
     item_updated.set_sensitive(false);
     menu.append(&item_updated);
 
-    let item_source = gtk::MenuItem::with_label("Source: --");
-    item_source.set_sensitive(false);
-    menu.append(&item_source);
-
     let item_error = gtk::MenuItem::with_label("usage 情報なし");
     item_error.set_sensitive(false);
     item_error.hide();
@@ -69,7 +65,6 @@ fn main() -> Result<(), glib::BoolError> {
         item_secondary,
         item_plan,
         item_updated,
-        item_source,
         item_error,
     }));
 
@@ -98,11 +93,11 @@ struct MenuState {
     item_secondary: gtk::MenuItem,
     item_plan: gtk::MenuItem,
     item_updated: gtk::MenuItem,
-    item_source: gtk::MenuItem,
     item_error: gtk::MenuItem,
 }
 
 fn refresh_indicator(indicator: &Indicator, state: &Rc<RefCell<MenuState>>) {
+    let polled_at = Local::now();
     match usage::find_latest_snapshot(&usage::default_sessions_dir()) {
         Ok(snapshot) => {
             let primary_left = usage::format_percent_left(snapshot.primary_used_percent);
@@ -110,9 +105,10 @@ fn refresh_indicator(indicator: &Indicator, state: &Rc<RefCell<MenuState>>) {
             let label = format!("5h {primary_left} / 7d {secondary_left}");
             indicator.set_label(&label, "");
             indicator.set_status(IndicatorStatus::Active);
-            if let Ok(icon_path) =
-                icon::generate_icon(snapshot.primary_used_percent, snapshot.secondary_used_percent)
-            {
+            if let Ok(icon_path) = icon::generate_icon(
+                snapshot.primary_used_percent,
+                snapshot.secondary_used_percent,
+            ) {
                 indicator.set_icon_theme_path("");
                 indicator.set_icon_theme_path(icon::icon_dir().to_string_lossy().as_ref());
                 if let Some(stem) = icon_path.file_stem().and_then(|stem| stem.to_str()) {
@@ -132,16 +128,15 @@ fn refresh_indicator(indicator: &Indicator, state: &Rc<RefCell<MenuState>>) {
                 secondary_left,
                 usage::format_reset(snapshot.secondary_resets_at, true)
             ));
-            state
-                .item_plan
-                .set_label(&format!("Plan: {}", snapshot.plan_type.unwrap_or_else(|| "--".into())));
-            state.item_updated.set_label(&format!(
-                "更新: {}",
-                format_timestamp(snapshot.timestamp.with_timezone(&Local))
+            state.item_plan.set_label(&format!(
+                "Plan: {}",
+                snapshot.plan_type.unwrap_or_else(|| "--".into())
             ));
-            state
-                .item_source
-                .set_label(&format!("Source: {}", snapshot.source_path.display()));
+            state.item_updated.set_label(&format!(
+                "更新: {} ({})",
+                format_timestamp(polled_at),
+                format_snapshot_timestamp(snapshot.timestamp)
+            ));
             state.item_error.hide();
         }
         Err(err) => {
@@ -156,6 +151,9 @@ fn refresh_indicator(indicator: &Indicator, state: &Rc<RefCell<MenuState>>) {
                 let _ = icon::cleanup_old_icons(&icon_path);
             }
             let state = state.borrow_mut();
+            state
+                .item_updated
+                .set_label(&format!("更新: {}", format_timestamp(polled_at)));
             state.item_error.set_label(&err);
             state.item_error.show();
         }
@@ -164,4 +162,11 @@ fn refresh_indicator(indicator: &Indicator, state: &Rc<RefCell<MenuState>>) {
 
 fn format_timestamp(timestamp: DateTime<Local>) -> String {
     timestamp.format("%H:%M:%S").to_string()
+}
+
+fn format_snapshot_timestamp(timestamp: DateTime<FixedOffset>) -> String {
+    timestamp
+        .with_timezone(&Local)
+        .format("%H:%M:%S")
+        .to_string()
 }

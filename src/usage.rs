@@ -71,7 +71,7 @@ pub fn find_latest_snapshot(path: &Path) -> Result<UsageSnapshot, String> {
 
             let replace = match best.as_ref() {
                 None => true,
-                Some(current) => snapshot.timestamp >= current.timestamp,
+                Some(current) => snapshot_is_better(&snapshot, current),
             };
             if replace {
                 best = Some(snapshot);
@@ -183,6 +183,22 @@ fn parse_snapshot_line(line: &str, source_path: &Path) -> Result<Option<UsageSna
         secondary_resets_at,
         plan_type: rate_limits.plan_type,
     }))
+}
+
+fn snapshot_is_better(candidate: &UsageSnapshot, current: &UsageSnapshot) -> bool {
+    if candidate.timestamp != current.timestamp {
+        return candidate.timestamp > current.timestamp;
+    }
+
+    if candidate.primary_used_percent != current.primary_used_percent {
+        return candidate.primary_used_percent > current.primary_used_percent;
+    }
+
+    if candidate.secondary_used_percent != current.secondary_used_percent {
+        return candidate.secondary_used_percent > current.secondary_used_percent;
+    }
+
+    false
 }
 
 fn parse_timestamp(timestamp: &str) -> Result<DateTime<chrono::FixedOffset>, String> {
