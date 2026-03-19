@@ -19,7 +19,7 @@ sudo apt install cargo pkg-config libgtk-3-dev libayatana-appindicator3-dev
 Rust 実装は `~/.codex/sessions/**/rollout-*.jsonl` を読み取り、
 `rate_limits != null` を持つ最新の `token_count` snapshot を表示します。
 
-詳しい仕様は [SPEC.md](./SPEC.md) を参照してください。
+詳しい仕様は [docs/SPEC.md](./docs/SPEC.md) を参照してください。
 
 ## Development Run
 
