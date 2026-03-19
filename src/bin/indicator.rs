@@ -23,11 +23,11 @@ fn main() -> Result<(), glib::BoolError> {
 
     let menu = gtk::Menu::new();
 
-    let item_primary = gtk::MenuItem::with_label("5h limit: --");
+    let item_primary = gtk::MenuItem::with_label("5h:  --% (リセット: --:--)");
     item_primary.set_sensitive(false);
     menu.append(&item_primary);
 
-    let item_secondary = gtk::MenuItem::with_label("Weekly limit: --");
+    let item_secondary = gtk::MenuItem::with_label("7d:  --% (リセット: --/--)");
     item_secondary.set_sensitive(false);
     menu.append(&item_secondary);
 
@@ -37,7 +37,7 @@ fn main() -> Result<(), glib::BoolError> {
 
     menu.append(&gtk::SeparatorMenuItem::new());
 
-    let item_updated = gtk::MenuItem::with_label("更新: --");
+    let item_updated = gtk::MenuItem::with_label("最終更新: --:--");
     item_updated.set_sensitive(false);
     menu.append(&item_updated);
 
@@ -119,13 +119,13 @@ fn refresh_indicator(indicator: &Indicator, state: &Rc<RefCell<MenuState>>) {
 
             let state = state.borrow_mut();
             state.item_primary.set_label(&format!(
-                "5h limit: {} (resets {})",
-                primary_left,
+                "5h:  {} (リセット: {})",
+                format_percent_used(snapshot.primary_used_percent),
                 usage::format_reset(snapshot.primary_resets_at, false)
             ));
             state.item_secondary.set_label(&format!(
-                "Weekly limit: {} (resets {})",
-                secondary_left,
+                "7d:  {} (リセット: {})",
+                format_percent_used(snapshot.secondary_used_percent),
                 usage::format_reset(snapshot.secondary_resets_at, true)
             ));
             state.item_plan.set_label(&format!(
@@ -133,8 +133,8 @@ fn refresh_indicator(indicator: &Indicator, state: &Rc<RefCell<MenuState>>) {
                 snapshot.plan_type.unwrap_or_else(|| "--".into())
             ));
             state.item_updated.set_label(&format!(
-                "更新: {} ({})",
-                format_timestamp(polled_at),
+                "最終更新: {} ({})",
+                format_timestamp(polled_at, false),
                 format_snapshot_timestamp(snapshot.timestamp)
             ));
             state.item_error.hide();
@@ -153,15 +153,19 @@ fn refresh_indicator(indicator: &Indicator, state: &Rc<RefCell<MenuState>>) {
             let state = state.borrow_mut();
             state
                 .item_updated
-                .set_label(&format!("更新: {}", format_timestamp(polled_at)));
+                .set_label(&format!("最終更新: {}", format_timestamp(polled_at, false)));
             state.item_error.set_label(&err);
             state.item_error.show();
         }
     }
 }
 
-fn format_timestamp(timestamp: DateTime<Local>) -> String {
-    timestamp.format("%H:%M:%S").to_string()
+fn format_timestamp(timestamp: DateTime<Local>, with_seconds: bool) -> String {
+    if with_seconds {
+        timestamp.format("%H:%M:%S").to_string()
+    } else {
+        timestamp.format("%H:%M").to_string()
+    }
 }
 
 fn format_snapshot_timestamp(timestamp: DateTime<FixedOffset>) -> String {
@@ -169,4 +173,8 @@ fn format_snapshot_timestamp(timestamp: DateTime<FixedOffset>) -> String {
         .with_timezone(&Local)
         .format("%H:%M:%S")
         .to_string()
+}
+
+fn format_percent_used(used_percent: f64) -> String {
+    format!("{used_percent:.0}%")
 }

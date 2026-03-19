@@ -91,9 +91,9 @@ pub fn format_reset(reset_at: Option<DateTime<Local>>, with_date: bool) -> Strin
         None => "unknown".to_string(),
         Some(dt) => {
             if with_date {
-                dt.format("%Y-%m-%d %H:%M %Z").to_string()
+                dt.format("%m/%d %H:%M").to_string() + " JST"
             } else {
-                dt.format("%H:%M %Z").to_string()
+                dt.format("%H:%M").to_string() + " JST"
             }
         }
     }
