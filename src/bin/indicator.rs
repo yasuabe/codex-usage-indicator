@@ -100,10 +100,7 @@ fn refresh_indicator(indicator: &Indicator, state: &Rc<RefCell<MenuState>>) {
     let polled_at = Local::now();
     match usage::find_latest_snapshot(&usage::default_sessions_dir()) {
         Ok(snapshot) => {
-            let primary_left = usage::format_percent_left(snapshot.primary_used_percent);
-            let secondary_left = usage::format_percent_left(snapshot.secondary_used_percent);
-            let label = format!("5h {primary_left} / 7d {secondary_left}");
-            indicator.set_label(&label, "");
+            indicator.set_label("", "");
             indicator.set_status(IndicatorStatus::Active);
             if let Ok(icon_path) = icon::generate_icon(
                 snapshot.primary_used_percent,
@@ -140,7 +137,7 @@ fn refresh_indicator(indicator: &Indicator, state: &Rc<RefCell<MenuState>>) {
             state.item_error.hide();
         }
         Err(err) => {
-            indicator.set_label("usage unavailable", "");
+            indicator.set_label("", "");
             indicator.set_status(IndicatorStatus::Active);
             if let Ok(icon_path) = icon::generate_error_icon() {
                 indicator.set_icon_theme_path("");
