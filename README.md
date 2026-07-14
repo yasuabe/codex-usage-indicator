@@ -23,8 +23,21 @@ Rust 実装は `~/.codex/sessions/**/rollout-*.jsonl` を読み取り、
 
 ## Development Run
 
+CLI で最新の usage snapshot を確認する:
+
 ```bash
-cargo run -- ~/.codex/sessions
+cargo run --bin codex-usage-indicator -- ~/.codex/sessions
+```
+
+`~/.codex/sessions` は省略できます。省略時も同じデフォルトパスを読み取ります。
+
+```bash
+cargo run --bin codex-usage-indicator
+```
+
+GNOME トップバーの indicator を起動する:
+
+```bash
 cargo run --bin indicator
 ```
 
